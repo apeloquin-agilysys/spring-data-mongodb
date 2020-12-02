@@ -43,6 +43,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.data.annotation.Embedded;
+import org.springframework.data.annotation.Embedded.OnEmpty;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -427,6 +429,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
+			if (prop.isEmbedded()) {
+
+				accessor.setProperty(prop, readEmbedded(documentAccessor, currentPath, prop, mappingContext.getPersistentEntity(prop)));
+				continue;
+			}
+
 			// We skip the id property since it was already set
 
 			if (entity.isIdProperty(prop)) {
@@ -470,6 +478,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
 		accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
+	}
+
+	@Nullable
+	private Object readEmbedded(DocumentAccessor documentAccessor, ObjectPath currentPath, MongoPersistentProperty prop,
+			MongoPersistentEntity<?> embeddedEntity) {
+
+		if (prop.findAnnotation(Embedded.class).onEmpty().equals(OnEmpty.USE_EMPTY)) {
+			return read(embeddedEntity, (Document) documentAccessor.getDocument(), currentPath);
+		}
+
+		for (MongoPersistentProperty persistentProperty : embeddedEntity) {
+			if (documentAccessor.hasValue(persistentProperty)) {
+				return read(embeddedEntity, (Document) documentAccessor.getDocument(), currentPath);
+			}
+		}
+		return null;
 	}
 
 	/*
@@ -641,6 +665,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
 		TypeInformation<?> type = prop.getTypeInformation();
+
+		if (prop.isEmbedded()) {
+
+			Document target = new Document();
+			writeInternal(obj, target, mappingContext.getPersistentEntity(prop));
+
+			accessor.putAll(prop, target);
+			return;
+		}
 
 		if (valueType.isCollectionLike()) {
 			List<Object> collectionInternal = createCollection(asCollection(obj), prop);

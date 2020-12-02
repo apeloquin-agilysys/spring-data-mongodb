@@ -49,8 +49,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Embedded;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
@@ -2179,6 +2181,120 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((LinkedHashMap) result.get("cluster")).get("_id")).isEqualTo(100L);
 	}
 
+	@Test // DATAMONGO-1902
+	void writeFlattensEmbeddedType() {
+
+		WithNullableEmbedded source = new WithNullableEmbedded();
+		source.id = "id-1";
+		source.embeddableValue = new EmbeddableType();
+		source.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
+		source.embeddableValue.stringValue = "string-val";
+		source.embeddableValue.transientValue = "must-not-be-written";
+		source.embeddableValue.atFieldAnnotatedValue = "@Field";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		System.out.println("target.toJson(): " + target.toJson());
+
+		assertThat(target).containsEntry("_id", "id-1") //
+				.containsEntry("stringValue", "string-val") //
+				.containsEntry("listValue", Arrays.asList("list-val-1", "list-val-2")) //
+				.containsEntry("with-at-field-annotation", "@Field") //
+				.doesNotContainKey("embeddableValue") //
+				.doesNotContainKey("transientValue");
+	}
+
+	@Test // DATAMONGO-1902
+	void writePrefixesEmbeddedType() {
+
+		WithPrefixedNullableEmbedded source = new WithPrefixedNullableEmbedded();
+		source.id = "id-1";
+		source.embeddableValue = new EmbeddableType();
+		source.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
+		source.embeddableValue.stringValue = "string-val";
+		source.embeddableValue.transientValue = "must-not-be-written";
+		source.embeddableValue.atFieldAnnotatedValue = "@Field";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("_id", "id-1") //
+				.containsEntry("prefix-stringValue", "string-val") //
+				.containsEntry("prefix-listValue", Arrays.asList("list-val-1", "list-val-2")) //
+				.containsEntry("prefix-with-at-field-annotation", "@Field") //
+				.doesNotContainKey("embeddableValue") //
+				.doesNotContainKey("transientValue") //
+				.doesNotContainKey("prefix-transientValue");
+	}
+
+	@Test // DATAMONGO-1902
+	void writeNullEmbeddedType() {
+
+		WithNullableEmbedded source = new WithNullableEmbedded();
+		source.id = "id-1";
+		source.embeddableValue = null;
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target) //
+				.doesNotContainKey("prefix-stringValue").doesNotContainKey("prefix-listValue")
+				.doesNotContainKey("embeddableValue");
+	}
+
+	@Test // DATAMONGO-1902
+	void readEmbeddedType() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1") //
+				.append("stringValue", "string-val") //
+				.append("listValue", Arrays.asList("list-val-1", "list-val-2")) //
+				.append("with-at-field-annotation", "@Field");
+
+		EmbeddableType embeddableValue = new EmbeddableType();
+		embeddableValue.stringValue = "string-val";
+		embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
+		embeddableValue.atFieldAnnotatedValue = "@Field";
+
+		WithNullableEmbedded target = converter.read(WithNullableEmbedded.class, source);
+		assertThat(target.embeddableValue).isEqualTo(embeddableValue);
+	}
+
+	@Test // DATAMONGO-1902
+	void readPrefixedEmbeddedType() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1") //
+				.append("prefix-stringValue", "string-val") //
+				.append("prefix-listValue", Arrays.asList("list-val-1", "list-val-2")) //
+				.append("prefix-with-at-field-annotation", "@Field");
+
+		EmbeddableType embeddableValue = new EmbeddableType();
+		embeddableValue.stringValue = "string-val";
+		embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
+		embeddableValue.atFieldAnnotatedValue = "@Field";
+
+		WithPrefixedNullableEmbedded target = converter.read(WithPrefixedNullableEmbedded.class, source);
+		assertThat(target.embeddableValue).isEqualTo(embeddableValue);
+	}
+
+	@Test // DATAMONGO-1902
+	void readNullableEmbeddedTypeWhenSourceDoesNotContainValues() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1");
+
+		WithNullableEmbedded target = converter.read(WithNullableEmbedded.class, source);
+		assertThat(target.embeddableValue).isNull();
+	}
+
+	@Test // DATAMONGO-1902
+	void readEmptyEmbeddedTypeWhenSourceDoesNotContainValues() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1");
+
+		WithEmptyEmbeddedType target = converter.read(WithEmptyEmbeddedType.class, source);
+		assertThat(target.embeddableValue).isNotNull();
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2641,6 +2757,40 @@ public class MappingMongoConverterUnitTests {
 		Date dateAsObjectId;
 	}
 
+	static class WithNullableEmbedded {
+
+		String id;
+
+		@Embedded.Nullable EmbeddableType embeddableValue;
+	}
+
+	static class WithPrefixedNullableEmbedded {
+
+		String id;
+
+		@Embedded.Nullable("prefix-") EmbeddableType embeddableValue;
+	}
+
+	static class WithEmptyEmbeddedType {
+
+		String id;
+
+		@Embedded.Empty EmbeddableType embeddableValue;
+	}
+
+	@EqualsAndHashCode
+	static class EmbeddableType {
+
+		String stringValue;
+		List<String> listValue;
+
+		@Field("with-at-field-annotation") //
+		String atFieldAnnotatedValue;
+
+		@Transient //
+		String transientValue;
+	}
+
 	static class ReturningAfterConvertCallback implements AfterConvertCallback<Person> {
 
 		@Override
@@ -2649,4 +2799,5 @@ public class MappingMongoConverterUnitTests {
 			return entity;
 		}
 	}
+
 }

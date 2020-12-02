@@ -389,7 +389,7 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("reference").exists(false));
 
-		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
 
 		org.bson.Document reference = getAsDocument(mappedObject, "reference");
@@ -405,7 +405,7 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("someString").is("foo").andOperator(where("reference").in(reference)));
 
-		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
 
 		assertThat(mappedObject).containsEntry("someString", "foo");
@@ -446,7 +446,7 @@ public class QueryMapperUnitTests {
 		Query query = query(where("someString").is("foo"));
 		query.fields().exclude("reference");
 
-		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
 		org.bson.Document queryResult = mapper.getMappedObject(query.getQueryObject(), entity);
 		org.bson.Document fieldsResult = mapper.getMappedObject(query.getFieldsObject(), entity);
 
@@ -457,7 +457,7 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-686
 	void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
 
-		BasicMongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(Sample.class);
+		MongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(Sample.class);
 		String idPropertyName = persistentEntity.getIdProperty().getName();
 		org.bson.Document queryObject = query(where(idPropertyName).in("42")).getQueryObject();
 
@@ -515,7 +515,7 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-773
 	void queryMapperShouldBeAbleToProcessQueriesThatIncludeDbRefFields() {
 
-		BasicMongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(WithDBRef.class);
+		MongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(WithDBRef.class);
 
 		Query qry = query(where("someString").is("abc"));
 		qry.fields().include("reference");
