@@ -1385,6 +1385,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return !obj.getClass().equals(typeInformation.getType()) ? newDocument : removeTypeInfo(newDocument, true);
 	}
 
+	@Nullable
+	@Override
+	public Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity entity) {
+		Document newDocument = new Document();
+		writeInternal(obj, newDocument, entity);
+		return newDocument;
+	}
+
 	public List<Object> maybeConvertList(Iterable<?> source, TypeInformation<?> typeInformation) {
 
 		List<Object> newDbl = new ArrayList<>();

@@ -140,9 +140,23 @@ public class QueryMapper {
 			try {
 
 				Field field = createPropertyField(entity, key, mappingContext);
-				Entry<String, Object> entry = getMappedObjectForField(field, BsonUtils.get(query, key));
 
-				result.put(entry.getKey(), entry.getValue());
+				// TODO: move to dedicated method
+				if (field.getProperty() != null && field.getProperty().isEmbedded()) {
+
+					Object theNestedObject = BsonUtils.get(query, key);
+					Document mappedValue = (Document) getMappedValue(field, theNestedObject);
+					if (!StringUtils.hasText(field.getMappedKey())) {
+						result.putAll(mappedValue);
+					} else {
+						result.put(field.getMappedKey(), mappedValue);
+					}
+				} else {
+
+					Entry<String, Object> entry = getMappedObjectForField(field, BsonUtils.get(query, key));
+
+					result.put(entry.getKey(), entry.getValue());
+				}
 			} catch (InvalidPersistentPropertyPath invalidPathException) {
 
 				// in case the object has not already been mapped
@@ -912,6 +926,7 @@ public class QueryMapper {
 		public TypeInformation<?> getTypeHint() {
 			return ClassTypeInformation.OBJECT;
 		}
+
 	}
 
 	/**
