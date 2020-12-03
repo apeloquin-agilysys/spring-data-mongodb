@@ -289,4 +289,9 @@ public class EmbeddedMongoPersistentEntity<T> implements MongoPersistentEntity<T
 	public void setEvaluationContextProvider(EvaluationContextProvider provider) {
 
 	}
+
+	@Override
+	public boolean isEmbedded() {
+		return context.getProperty().isEmbedded();
+	}
 }

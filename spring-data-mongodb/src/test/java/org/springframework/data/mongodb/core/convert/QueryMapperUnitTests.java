@@ -32,6 +32,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -1013,6 +1014,20 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
+	void rendersQueryOnEmbeddedObjectCorrectly() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "test";
+
+		Query source = query(Criteria.where("embeddableValue").is(embeddableType));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("stringValue", "test"));
+	}
+
+	@Test // DATAMONGO-1902
 	void rendersQueryOnEmbeddedCorrectly() {
 
 		Query source = query(Criteria.where("embeddableValue.stringValue").is("test"));
@@ -1032,6 +1047,33 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(WithPrefixedEmbedded.class));
 
 		assertThat(target).isEqualTo(new org.bson.Document("prefix-stringValue", "test"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersQueryOnNestedEmbeddedObjectCorrectly() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "test";
+		Query source = query(Criteria.where("withEmbedded.embeddableValue").is(embeddableType));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("withEmbedded", new org.bson.Document("stringValue", "test")));
+	}
+
+	@Test // DATAMONGO-1902
+	@Disabled
+	void rendersQueryOnNestedPrefixedEmbeddedObjectCorrectly() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "test";
+		Query source = query(Criteria.where("withPrefixedEmbedded.embeddableValue").is(embeddableType));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("withPrefixedEmbedded", new org.bson.Document("prefix-stringValue", "test")));
 	}
 
 	@Test // DATAMONGO-1902
