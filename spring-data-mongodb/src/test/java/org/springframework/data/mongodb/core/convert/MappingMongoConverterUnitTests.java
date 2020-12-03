@@ -2244,6 +2244,28 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
+	void writeDeepNestedEmbeddedType() {
+
+		WrapperAroundWithEmbedded source = new WrapperAroundWithEmbedded();
+		source.someValue = "root-level-value";
+		source.nullableEmbedded = new WithNullableEmbedded();
+		source.nullableEmbedded.id = "id-1";
+		source.nullableEmbedded.embeddableValue = new EmbeddableType();
+		source.nullableEmbedded.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
+		source.nullableEmbedded.embeddableValue.stringValue = "string-val";
+		source.nullableEmbedded.embeddableValue.transientValue = "must-not-be-written";
+		source.nullableEmbedded.embeddableValue.atFieldAnnotatedValue = "@Field";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("someValue", "root-level-value") //
+				.containsEntry("nullableEmbedded", new org.bson.Document("_id", "id-1").append("stringValue", "string-val") //
+						.append("listValue", Arrays.asList("list-val-1", "list-val-2")) //
+						.append("with-at-field-annotation", "@Field")); //
+	}
+
+	@Test // DATAMONGO-1902
 	void readEmbeddedType() {
 
 		org.bson.Document source = new org.bson.Document("_id", "id-1") //
@@ -2293,6 +2315,26 @@ public class MappingMongoConverterUnitTests {
 
 		WithEmptyEmbeddedType target = converter.read(WithEmptyEmbeddedType.class, source);
 		assertThat(target.embeddableValue).isNotNull();
+	}
+
+	@Test // DATAMONGO-1902
+	void readDeepNestedEmbeddedType() {
+
+		org.bson.Document source = new org.bson.Document("someValue", "root-level-value").append("nullableEmbedded",
+				new org.bson.Document("_id", "id-1").append("stringValue", "string-val") //
+						.append("listValue", Arrays.asList("list-val-1", "list-val-2")) //
+						.append("with-at-field-annotation", "@Field"));
+
+		WrapperAroundWithEmbedded target = converter.read(WrapperAroundWithEmbedded.class, source);
+
+		EmbeddableType embeddableValue = new EmbeddableType();
+		embeddableValue.stringValue = "string-val";
+		embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
+		embeddableValue.atFieldAnnotatedValue = "@Field";
+
+		assertThat(target.someValue).isEqualTo("root-level-value");
+		assertThat(target.nullableEmbedded).isNotNull();
+		assertThat(target.nullableEmbedded.embeddableValue).isEqualTo(embeddableValue);
 	}
 
 	static class GenericType<T> {
@@ -2755,6 +2797,14 @@ public class MappingMongoConverterUnitTests {
 
 		@Field(targetType = FieldType.OBJECT_ID) //
 		Date dateAsObjectId;
+	}
+
+	static class WrapperAroundWithEmbedded {
+
+		String someValue;
+		WithNullableEmbedded nullableEmbedded;
+		WithEmptyEmbeddedType emptyEmbedded;
+		WithPrefixedNullableEmbedded prefixedEmbedded;
 	}
 
 	static class WithNullableEmbedded {

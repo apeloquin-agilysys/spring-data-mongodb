@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Embedded;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
@@ -137,7 +138,10 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		public String convert(MongoPersistentProperty source) {
-			return source.getFieldName();
+			if(!source.isEmbedded()) {
+				return source.getFieldName();
+			}
+			return "";
 		}
 	}
 }
