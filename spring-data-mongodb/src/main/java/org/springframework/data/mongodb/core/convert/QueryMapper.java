@@ -511,6 +511,11 @@ public class QueryMapper {
 	 */
 	@Nullable
 	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
+
+		if (entity != null && entity.isEmbedded()) {
+			return converter.convertToMongoType(source, entity);
+		}
+
 		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
 	}
 
