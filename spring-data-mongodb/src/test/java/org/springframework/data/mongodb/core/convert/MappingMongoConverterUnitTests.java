@@ -2195,8 +2195,6 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 
-		System.out.println("target.toJson(): " + target.toJson());
-
 		assertThat(target).containsEntry("_id", "id-1") //
 				.containsEntry("stringValue", "string-val") //
 				.containsEntry("listValue", Arrays.asList("list-val-1", "list-val-2")) //

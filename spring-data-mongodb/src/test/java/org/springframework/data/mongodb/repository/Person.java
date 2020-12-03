@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.data.annotation.Embedded;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
@@ -69,6 +70,9 @@ public class Person extends Contact {
 	@DBRef(lazy = true) ArrayList<User> realFans;
 
 	Credentials credentials;
+
+	@Embedded.Nullable(prefix = "u") //
+	User embeddedUser;
 
 	public Person() {
 
@@ -294,6 +298,14 @@ public class Person extends Contact {
 
 	public List<String> getSkills() {
 		return skills;
+	}
+
+	public User getEmbeddedUser() {
+		return embeddedUser;
+	}
+
+	public void setEmbeddedUser(User embeddedUser) {
+		this.embeddedUser = embeddedUser;
 	}
 
 	/*
