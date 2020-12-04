@@ -15,12 +15,15 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.data.annotation.Embedded;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -36,8 +39,10 @@ import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MongoException;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
@@ -82,9 +87,14 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		Sort sort = tree.getSort();
 
 		for (Part part : tree.getParts()) {
+
 			if (GEOSPATIAL_TYPES.contains(part.getType())) {
 				return;
 			}
+			if(isIndexOnEmbeddedType(part)) {
+				return;
+			}
+
 			String property = part.getProperty().toDotPath();
 			Direction order = toDirection(sort, property);
 			index.on(property, order);
@@ -107,7 +117,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 
 		MongoEntityMetadata<?> metadata = query.getQueryMethod().getEntityInformation();
 		try {
-			indexOperationsProvider.indexOps(metadata.getCollectionName()).ensureIndex(index);
+			indexOperationsProvider.indexOps(metadata.getCollectionName(), metadata.getJavaType()).ensureIndex(index);
 		} catch (UncategorizedMongoDbException e) {
 
 			if (e.getCause() instanceof MongoException) {
@@ -127,6 +137,19 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 			}
 		}
 		LOG.debug(String.format("Created %s!", index));
+	}
+
+	public boolean isIndexOnEmbeddedType(Part part) {
+
+		// TODO we could do it for nested fields in the
+		Field field = ReflectionUtils.findField(part.getProperty().getOwningType().getType(),
+				part.getProperty().getSegment());
+
+		if (field == null) {
+			return false;
+		}
+
+		return AnnotatedElementUtils.hasAnnotation(field, Embedded.class);
 	}
 
 	private static Direction toDirection(Sort sort, String property) {
