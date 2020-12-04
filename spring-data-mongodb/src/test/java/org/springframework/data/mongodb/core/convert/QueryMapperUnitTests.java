@@ -1097,6 +1097,73 @@ public class QueryMapperUnitTests {
 		assertThat(target).isEqualTo(new org.bson.Document("withPrefixedEmbedded.prefix-stringValue", "test"));
 	}
 
+	@Test // DATAMONGO-1902
+	void sortByEmbeddable() {
+
+		Query query = new Query().with(Sort.by("embeddableValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document());
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByEmbeddableValue() {
+
+		// atFieldAnnotatedValue
+		Query query = new Query().with(Sort.by("embeddableValue.stringValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("stringValue", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByEmbeddableValueWithFieldAnnotation() {
+
+		Query query = new Query().with(Sort.by("embeddableValue.atFieldAnnotatedValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByPrefixedEmbeddableValueWithFieldAnnotation() {
+
+		Query query = new Query().with(Sort.by("embeddableValue.atFieldAnnotatedValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithPrefixedEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("prefix-with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByNestedEmbeddableValueWithFieldAnnotation() {
+
+		Query query = new Query().with(Sort.by("withEmbedded.embeddableValue.atFieldAnnotatedValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("withEmbedded.with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByNestedPrefixedEmbeddableValueWithFieldAnnotation() {
+
+		Query query = new Query().with(Sort.by("withPrefixedEmbedded.embeddableValue.atFieldAnnotatedValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("withPrefixedEmbedded.prefix-with-at-field-annotation", 1));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;

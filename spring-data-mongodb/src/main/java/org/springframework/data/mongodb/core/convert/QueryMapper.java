@@ -191,6 +191,10 @@ public class QueryMapper {
 		for (Map.Entry<String, Object> entry : BsonUtils.asMap(sortObject).entrySet()) {
 
 			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
+			if(field.getProperty() != null && field.getProperty().isEmbedded()) {
+				continue;
+			}
+
 			mappedSort.put(field.getMappedKey(), entry.getValue());
 		}
 
