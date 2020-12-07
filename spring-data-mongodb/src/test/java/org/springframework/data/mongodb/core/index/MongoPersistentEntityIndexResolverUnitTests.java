@@ -1282,6 +1282,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			});
 		}
 
+		@Test
+		public void xxx() {
+			fail("TODO: index on embedded");
+		}
+
 		@Document
 		class MixedIndexRoot {
 

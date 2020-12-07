@@ -2335,6 +2335,11 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target.nullableEmbedded.embeddableValue).isEqualTo(embeddableValue);
 	}
 
+	@Test
+	void xxx() {
+		fail("TODO: embedded with complex types");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
