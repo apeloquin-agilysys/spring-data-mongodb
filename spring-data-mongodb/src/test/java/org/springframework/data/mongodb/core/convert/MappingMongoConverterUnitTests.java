@@ -2335,9 +2335,41 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target.nullableEmbedded.embeddableValue).isEqualTo(embeddableValue);
 	}
 
-	@Test
-	void xxx() {
-		fail("TODO: embedded with complex types");
+	@Test // DATAMONGO-1902
+	void readEmbeddedTypeWithComplexValue() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("address",
+				new org.bson.Document("street", "1007 Mountain Drive").append("city", "Gotham"));
+
+		WithNullableEmbedded target = converter.read(WithNullableEmbedded.class, source);
+
+		Address expected = new Address();
+		expected.city = "Gotham";
+		expected.street = "1007 Mountain Drive";
+
+		assertThat(target.embeddableValue.address) //
+				.isEqualTo(expected);
+	}
+
+	@Test // DATAMONGO-1902
+	void writeEmbeddedTypeWithComplexValue() {
+
+		WithNullableEmbedded source = new WithNullableEmbedded();
+		source.id = "id-1";
+		source.embeddableValue = new EmbeddableType();
+		source.embeddableValue.address = new Address();
+		source.embeddableValue.address.city = "Gotham";
+		source.embeddableValue.address.street = "1007 Mountain Drive";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target) //
+				.containsEntry("address", new org.bson.Document("street", "1007 Mountain Drive").append("city", "Gotham")) //
+				.doesNotContainKey("street") //
+				.doesNotContainKey("address.street") //
+				.doesNotContainKey("city") //
+				.doesNotContainKey("address.city");
 	}
 
 	static class GenericType<T> {
@@ -2369,6 +2401,7 @@ public class MappingMongoConverterUnitTests {
 
 	}
 
+	@EqualsAndHashCode
 	static class Address implements InterfaceType {
 		String street;
 		String city;
@@ -2842,6 +2875,8 @@ public class MappingMongoConverterUnitTests {
 
 		@Transient //
 		String transientValue;
+
+		Address address;
 	}
 
 	static class ReturningAfterConvertCallback implements AfterConvertCallback<Person> {

@@ -135,8 +135,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		try {
 			if (persistentProperty.isEntity()) {
-				indexes.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(),
-						persistentProperty.getFieldName(), Path.of(persistentProperty), root.getCollection(), guard));
+				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
+						persistentProperty.isEmbedded() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty), root.getCollection(), guard));
 			}
 
 			List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(
@@ -163,7 +163,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> resolveIndexForClass(final TypeInformation<?> type, final String dotPath,
 			final Path path, final String collection, final CycleGuard guard) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
+		return resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(type), dotPath, path, collection, guard);
+	}
+
+	private List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> entity, final String dotPath,
+			final Path path, final String collection, final CycleGuard guard) {
 
 		final List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(dotPath, collection, entity));
@@ -179,14 +183,18 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private void guardAndPotentiallyAddIndexForProperty(MongoPersistentProperty persistentProperty, String dotPath,
 			Path path, String collection, List<IndexDefinitionHolder> indexes, CycleGuard guard) {
 
-		String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "") + persistentProperty.getFieldName();
+		String propertyDotPath = dotPath;
+
+		if(!persistentProperty.isEmbedded()) {
+			propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "") + persistentProperty.getFieldName();
+		}
 
 		Path propertyPath = path.append(persistentProperty);
 		guard.protect(persistentProperty, propertyPath);
 
 		if (persistentProperty.isEntity()) {
 			try {
-				indexes.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(), propertyDotPath,
+				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty), propertyDotPath,
 						propertyPath, collection, guard));
 			} catch (CyclicPropertyReferenceException e) {
 				LOGGER.info(e.getMessage());

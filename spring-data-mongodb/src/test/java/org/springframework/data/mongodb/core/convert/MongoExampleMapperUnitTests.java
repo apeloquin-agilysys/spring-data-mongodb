@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 
 import org.bson.conversions.Bson;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -452,6 +453,12 @@ public class MongoExampleMapperUnitTests {
 
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
 		assertThat(document).doesNotContainKey("_class");
+	}
+
+	@Test
+	@Disabled("TODO: embedded types")
+	void xxx() {
+		// TODO: embedded
 	}
 
 	static class FlatDocument {

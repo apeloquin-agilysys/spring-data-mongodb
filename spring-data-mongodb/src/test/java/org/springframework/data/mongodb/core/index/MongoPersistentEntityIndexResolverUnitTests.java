@@ -22,7 +22,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.junit.Test;
@@ -30,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.data.annotation.Embedded;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -1282,9 +1284,34 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			});
 		}
 
-		@Test
-		public void xxx() {
-			fail("TODO: index on embedded");
+		@Test // DATAMONGO-1902
+		public void resolvedIndexOnEmbeddedType() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(WithEmbedded.class,
+					EmbeddableType.class);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("stringValue", 1);
+			});
+			assertThat(indexDefinitions.get(1)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("with-at-field-annotation", 1);
+			});
+		}
+
+		@Test // DATAMONGO-1902
+		public void resolvedIndexOnNestedEmbeddedType() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WrapperAroundWithEmbedded.class, WithEmbedded.class, EmbeddableType.class);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("withEmbedded.stringValue", 1);
+			});
+			assertThat(indexDefinitions.get(1)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("withEmbedded.with-at-field-annotation", 1);
+			});
 		}
 
 		@Document
@@ -1477,6 +1504,32 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			AlternatePathToNoCycleButIndenticallNamedPropertiesDeeplyNestedDocument path2;
 		}
 
+		@Document
+		static class WrapperAroundWithEmbedded {
+
+			String id;
+			WithEmbedded withEmbedded;
+		}
+
+		@Document
+		static class WithEmbedded {
+
+			String id;
+
+			@Embedded.Nullable EmbeddableType embeddableType;
+		}
+
+		static class EmbeddableType {
+
+			@Indexed String stringValue;
+
+			List<String> listValue;
+
+			@Indexed //
+			@Field("with-at-field-annotation") //
+			String atFieldAnnotatedValue;
+		}
+
 		static class AlternatePathToNoCycleButIndenticallNamedPropertiesDeeplyNestedDocument {
 			NoCycleButIndenticallNamedPropertiesDeeplyNested propertyWithIndexedStructure;
 		}
@@ -1526,17 +1579,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 	}
 
-	private static List<IndexDefinitionHolder> prepareMappingContextAndResolveIndexForType(Class<?> type) {
+	private static List<IndexDefinitionHolder> prepareMappingContextAndResolveIndexForType(Class<?>... types) {
 
-		MongoMappingContext mappingContext = prepareMappingContext(type);
+		MongoMappingContext mappingContext = prepareMappingContext(types);
 		MongoPersistentEntityIndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
-		return resolver.resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(type));
+		return resolver.resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(types[0]));
 	}
 
-	private static MongoMappingContext prepareMappingContext(Class<?> type) {
+	private static MongoMappingContext prepareMappingContext(Class<?>... types) {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(Collections.singleton(type));
+		mappingContext.setInitialEntitySet(new LinkedHashSet<>(Arrays.asList(types)));
 		mappingContext.initialize();
 
 		return mappingContext;
