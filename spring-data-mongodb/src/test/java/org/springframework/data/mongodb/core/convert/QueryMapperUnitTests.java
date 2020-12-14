@@ -1098,14 +1098,15 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void sortByEmbeddable() {
+	void sortByEmbeddableIsEmpty() {
 
 		Query query = new Query().with(Sort.by("embeddableValue"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
 				context.getPersistentEntity(WithEmbedded.class));
 
-		assertThat(document).isEqualTo(new org.bson.Document());
+		assertThat(document).isEqualTo(
+				new org.bson.Document("stringValue", 1).append("listValue", 1).append("with-at-field-annotation", 1));
 	}
 
 	@Test // DATAMONGO-1902
@@ -1162,6 +1163,31 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
 
 		assertThat(document).isEqualTo(new org.bson.Document("withPrefixedEmbedded.prefix-with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void projectOnEmbeddableUsesFields() {
+
+		Query query = new Query();
+		query.fields().include("embeddableValue");
+
+		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(
+				new org.bson.Document("stringValue", 1).append("listValue", 1).append("with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void projectOnEmbeddableValue() {
+
+		Query query = new Query();
+		query.fields().include("embeddableValue.stringValue");
+
+		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("stringValue", 1));
 	}
 
 	class WithDeepArrayNesting {

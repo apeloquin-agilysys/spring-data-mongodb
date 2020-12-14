@@ -403,7 +403,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 			String city, UUID uniqueId, String username, String password);
 
 	List<Person> findByEmbeddedUserUsername(String username);
+
 	List<Person> findByEmbeddedUser(User user);
-
-
 }

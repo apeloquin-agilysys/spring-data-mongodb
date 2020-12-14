@@ -136,7 +136,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		try {
 			if (persistentProperty.isEntity()) {
 				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
-						persistentProperty.isEmbedded() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty), root.getCollection(), guard));
+						persistentProperty.isEmbedded() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty),
+						root.getCollection(), guard));
 			}
 
 			List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(
@@ -185,7 +186,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		String propertyDotPath = dotPath;
 
-		if(!persistentProperty.isEmbedded()) {
+		if (!persistentProperty.isEmbedded()) {
 			propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "") + persistentProperty.getFieldName();
 		}
 
@@ -213,6 +214,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			MongoPersistentProperty persistentProperty) {
 
 		List<IndexDefinitionHolder> indices = new ArrayList<>(2);
+
+		if (persistentProperty.isEmbedded() && (persistentProperty.isAnnotationPresent(Indexed.class)
+				|| persistentProperty.isAnnotationPresent(HashIndexed.class)
+				|| persistentProperty.isAnnotationPresent(GeoSpatialIndexed.class))) {
+			throw new InvalidDataAccessApiUsageException(
+					String.format("Index annotation not allowed on embedded object for path '%s'.", dotPath));
+		}
 
 		if (persistentProperty.isAnnotationPresent(Indexed.class)) {
 			indices.add(createIndexDefinition(dotPath, collection, persistentProperty));
@@ -490,7 +498,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?,?> entity) {
+	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?, ?> entity) {
 
 		Object result = evaluate(filterExpression, getEvaluationContextForProperty(entity));
 
@@ -500,7 +508,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
 	}
-
 
 	/**
 	 * Creates {@link HashedIndex} wrapped in {@link IndexDefinitionHolder} out of {@link HashIndexed} for a given

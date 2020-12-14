@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Embedded;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
@@ -1314,6 +1315,14 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			});
 		}
 
+		@Test // DATAMONGO-1902
+		public void errorsOnIndexOnEmbedded() {
+
+			assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+					.isThrownBy(() -> prepareMappingContextAndResolveIndexForType(InvalidIndexOnEmbedded.class));
+
+		}
+
 		@Document
 		class MixedIndexRoot {
 
@@ -1517,6 +1526,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			String id;
 
 			@Embedded.Nullable EmbeddableType embeddableType;
+		}
+
+		@Document
+		class InvalidIndexOnEmbedded {
+
+			@Indexed //
+			@Embedded.Nullable //
+			EmbeddableType embeddableType;
+
 		}
 
 		static class EmbeddableType {
