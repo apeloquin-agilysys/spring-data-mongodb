@@ -32,19 +32,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.annotation.Embedded;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.EmbeddableType;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.ClassWithGeoTypes;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.WithDBRef;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
@@ -478,8 +477,8 @@ public class MongoExampleMapperUnitTests {
 		probe.prefixedEmbeddableValue.stringValue = "string-value";
 
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
-		assertThat(document).containsEntry("prefix-stringValue", "string-value").containsEntry("prefix-with-at-field-annotation",
-				"@Field");
+		assertThat(document).containsEntry("prefix-stringValue", "string-value")
+				.containsEntry("prefix-with-at-field-annotation", "@Field");
 	}
 
 	@Test // DATAMONGO-1902

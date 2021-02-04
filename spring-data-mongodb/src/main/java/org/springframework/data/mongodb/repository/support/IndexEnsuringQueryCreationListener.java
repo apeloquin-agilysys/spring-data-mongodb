@@ -23,7 +23,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.data.annotation.Embedded;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -31,6 +30,7 @@ import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.query.MongoEntityMetadata;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
@@ -42,7 +42,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MongoException;
-import org.springframework.util.StringUtils;
 
 /**
  * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
@@ -91,7 +90,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 			if (GEOSPATIAL_TYPES.contains(part.getType())) {
 				return;
 			}
-			if(isIndexOnEmbeddedType(part)) {
+			if (isIndexOnEmbeddedType(part)) {
 				return;
 			}
 

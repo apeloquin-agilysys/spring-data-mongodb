@@ -32,7 +32,6 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.annotation.Embedded;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -45,6 +44,7 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexRes
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;

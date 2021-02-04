@@ -43,8 +43,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.data.annotation.Embedded;
-import org.springframework.data.annotation.Embedded.OnEmpty;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -64,6 +62,8 @@ import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.mapping.Embedded;
+import org.springframework.data.mongodb.core.mapping.Embedded.OnEmpty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
@@ -431,7 +431,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if (prop.isEmbedded()) {
 
-				accessor.setProperty(prop, readEmbedded(documentAccessor, currentPath, prop, mappingContext.getPersistentEntity(prop)));
+				accessor.setProperty(prop,
+						readEmbedded(documentAccessor, currentPath, prop, mappingContext.getPersistentEntity(prop)));
 				continue;
 			}
 

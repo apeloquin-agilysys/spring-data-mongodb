@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.annotation.Embedded;
 
 /**
  * Unit tests for {@link AggregationUpdate}.
@@ -39,19 +38,4 @@ public class AggregationUpdateUnitTests {
 						.containsExactly(new Document("$set", new Document("stage-1", "value-1")),
 								new Document("$unset", "stage-2"), new Document("$set", new Document("stage-3", "value-3")));
 	}
-
-	@Test // DATAMONGO-2331
-	public void xxx() {
-
-
-		assertThat(AggregationUpdate.update() //
-				.set("stage-1").toValue("value-1") //
-				.unset("stage-2") //
-				.set("stage-3").toValue("value-3") //
-				.toPipeline(Aggregation.DEFAULT_CONTEXT)) //
-						.containsExactly(new Document("$set", new Document("stage-1", "value-1")),
-								new Document("$unset", "stage-2"), new Document("$set", new Document("stage-3", "value-3")));
-	}
-
-
 }

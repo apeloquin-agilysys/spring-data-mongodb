@@ -21,13 +21,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.data.annotation.Embedded;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**

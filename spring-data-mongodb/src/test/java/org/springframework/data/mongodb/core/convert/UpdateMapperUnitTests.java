@@ -38,7 +38,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.annotation.Embedded;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.CustomConversions;
@@ -49,6 +48,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -1112,9 +1112,10 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(WithEmbedded.class));
 
-		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("stringValue", "updated").append("listValue", Arrays.asList("val-1", "val-2"))));
+		assertThat(mappedUpdate).isEqualTo(new Document("$set",
+				new Document("stringValue", "updated").append("listValue", Arrays.asList("val-1", "val-2"))));
 	}
-	
+
 	@Test // DATAMONGO-1902
 	void mappingShouldConsiderValueOfPrefixedEmbeddedType() {
 
@@ -1138,7 +1139,8 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(WithPrefixedEmbedded.class));
 
-		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2"))));
+		assertThat(mappedUpdate).isEqualTo(new Document("$set",
+				new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2"))));
 	}
 
 	@Test // DATAMONGO-1902
@@ -1154,7 +1156,8 @@ class UpdateMapperUnitTests {
 				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
 
 		System.out.println("mappedUpdate.toJson(): " + mappedUpdate.toJson());
-		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("withPrefixedEmbedded", new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2")))));
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("withPrefixedEmbedded",
+				new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2")))));
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {

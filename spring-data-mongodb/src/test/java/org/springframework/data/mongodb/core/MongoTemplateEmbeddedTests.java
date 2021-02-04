@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.data.annotation.Embedded;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
