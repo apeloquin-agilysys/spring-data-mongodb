@@ -878,7 +878,7 @@ public class QueryMapper {
 
 			try {
 
-				PropertyPath path = PropertyPath.from(pathExpression.replaceAll("\\.\\d+", ""), entity.getTypeInformation());
+				PropertyPath path = PropertyPath.from(pathExpression.replaceAll("\\.\\d{1,8}", ""), entity.getTypeInformation());
 				PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
 
 				Iterator<MongoPersistentProperty> iterator = propertyPath.iterator();
